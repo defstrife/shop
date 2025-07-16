@@ -60,50 +60,39 @@ class DatabaseManager:
         self.connection.commit()
         return self.cursor.lastrowid
     
+    def get_customers(self) -> List[Tuple]:
+        self.cursor.execute("SELECT * FROM customers")
+        return self.cursor.fetchall()
 
-    
-    def get_customer_id(self) -> List[Tuple]:
-        self.cursor.execute("SELECT id FROM customers")
+    def get_orders(self) -> List[Tuple]:
+        self.cursor.execute("SELECT o.id, o.order_date " + 
+        "FROM orders o " +
+        "JOIN customers c ON o.customer_id = c.id")
+        return self.cursor.fetchall()
+
+    def get_order_items(self) -> List[Tuple]:
+        self.cursor.execute("SELECT oi.id, o.id, o.order_date, c.name, p.title, oi.quantity " + 
+        "FROM order_items oi " +
+        "JOIN orders o ON o.id = oi.order_id " +
+        "JOIN customers c ON c.id = o.customer_id " +
+        "JOIN products p ON p.id = oi.product_id ")
+        return self.cursor.fetchall()
+
+    def get_products(self) -> List[Tuple]:
+        self.cursor.execute("SELECT * FROM products")
         return self.cursor.fetchall()
     
-    def get_customer_name(self) -> List[Tuple]:
-        self.cursor.execute("SELECT name FROM customers")
+    def get_orders_by_customer(self, customer_id: int) -> List[Tuple]:
+        self.cursor.execute("""
+        SELECT *  
+        FROM orders o 
+        JOIN customers c ON c.id = o.customer_id
+        JOIN order_items oi ON oi.order_id = o.id
+        JOIN products p ON p.id = oi.product_id
+        WHERE o.customer_id = ?
+        """, (customer_id,))
         return self.cursor.fetchall()
     
-    def get_customer_email(self) -> List[Tuple]:
-        self.cursor.execute("SELECT email FROM customers")
-        return self.cursor.fetchall()
-    
-    def get_product_id(self) -> List[Tuple]:
-        self.cursor.execute("SELECT id FROM products")
-        return self.cursor.fetchall()
-    
-    def get_product_title(self) -> List[Tuple]:
-        self.cursor.execute("SELECT title FROM products")
-        return self.cursor.fetchall()
-    
-    def get_product_price(self) -> List[Tuple]:
-        self.cursor.execute("SELECT price FROM products")
-        return self.cursor.fetchall()
-    
-    def get_order_id(self) -> List[Tuple]:
-        self.cursor.execute("SELECT id FROM orders")
-        return self.cursor.fetchall()
-    
-    def get_order_date(self) -> List[Tuple]:
-        self.cursor.execute("SELECT order_date FROM orders")
-        return self.cursor.fetchall()
-    
-    def get_order_item_id(self) -> List[Tuple]:
-        self.cursor.execute("SELECT id FROM order_items")
-        return self.cursor.fetchall()
-    
-    def get_customer1_info(self) -> List[Tuple]:
-        self.cursor.execute(SELECT *
-            FROM customers c
-            JOIN orders o ON c.customer_id = o.customer_id
-            JOIN order_items oi ON o.order_id = oi.order_id) 
-        return self.cursor.fetchall()
-    
+
     def close(self):
         self.connection.close()
